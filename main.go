@@ -3,9 +3,35 @@ package main
 import (
     "github.com/gin-gonic/gin"
     "net/http"
+    "github.com/jinzhu/gorm"
+    _ "github.com/mattn/go-sqlite3"
 )
 
 var DB = make(map[string]string)
+
+type TodoBuys struct {
+    Id        int    `gorm:"AUTO_INCREMENT" form:"id" json:"id"`
+    Name string `gorm:"not null" form:"name" json:"name"`
+    imageUrl string `gorm:"not null" form:"imageUrl" json:"imageUrl"`
+    price  int `gorm:"not null" form:"price" json:"price"`
+}
+
+func InitDb() *gorm.DB {
+    // Openning file
+    db, err := gorm.Open("sqlite3", "./data.db")
+    db.LogMode(true)
+    // Error
+    if err != nil {
+        panic(err)
+    }
+    // Creating the table
+    if !db.HasTable(&TodoBuys{}) {
+        db.CreateTable(&TodoBuys{})
+        db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&TodoBuys{})
+    }
+
+    return db
+}
 
 func main() {
     r := gin.Default()
