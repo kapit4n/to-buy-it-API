@@ -5,6 +5,7 @@ import (
     "net/http"
     "github.com/jinzhu/gorm"
     _ "github.com/mattn/go-sqlite3"
+    "fmt"
 )
 
 var DB = make(map[string]string)
@@ -12,8 +13,8 @@ var DB = make(map[string]string)
 type TodoBuys struct {
     Id        int    `gorm:"AUTO_INCREMENT" form:"id" json:"id"`
     Name string `gorm:"not null" form:"name" json:"name"`
-    imageUrl string `gorm:"not null" form:"imageUrl" json:"imageUrl"`
-    price  int `gorm:"not null" form:"price" json:"price"`
+    ImageUrl string `gorm:"not null" form:"imageUrl" json:"imageUrl"`
+    Price  int `gorm:"not null" form:"price" json:"price"`
 }
 
 func InitDb() *gorm.DB {
@@ -36,10 +37,11 @@ func InitDb() *gorm.DB {
 func main() {
     r := gin.Default()
 
-    // Ping test
-    r.GET("/todobuys", func(c *gin.Context) {
-        c.String(http.StatusOK, "['IMAC', 'CELLPHONE']")
-    })
+    v1 := r.Group("api/v1")
+    {
+        v1.GET("/todobuys", GetTodoBuys)
+        v1.POST("/todobuys", PostTodoBuys)
+    }
 
     r.GET("/todobuys/:Id", func(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{
@@ -51,4 +53,41 @@ func main() {
 
     // Listen and Server in 0.0.0.0:8080
     r.Run(":8080")
+}
+
+func PostTodoBuys(c *gin.Context) {
+    db := InitDb()
+    defer db.Close()
+
+    var todoBuy TodoBuys
+    c.Bind(&todoBuy)
+    fmt.Printf("%s\n", "This is the common")
+    fmt.Printf("%+v\n", todoBuy)
+    if todoBuy.Name != "" && todoBuy.ImageUrl != "" {
+        // INSERT INTO "todoBuys" (name) VALUES (todoBuy.Name);
+        db.Create(&todoBuy)
+        // Display error
+        c.JSON(201, gin.H{"success": todoBuy})
+    } else {
+        // Display error
+        c.JSON(422, gin.H{"error": "Fields are empty"})
+    }
+
+    // curl -i -X POST -H "Content-Type: application/json" -d "{ \"name\": \"RUBICON\", \"imageUrl\": \"https://s-media-cache-ak0.pinimg.com/736x/0c/a5/90/0ca590b8330c80257c36ca137486244c.jpg\" , \"price\": \"40000\" }" http://localhost:8080/api/v1/todoBuys
+}
+
+func GetTodoBuys(c *gin.Context) {
+    // Connection to the database
+    db := InitDb()
+    // Close connection database
+    defer db.Close()
+
+    var todoBuys []TodoBuys
+    // SELECT * FROM todoBuys
+    db.Find(&todoBuys)
+
+    // Display JSON result
+    c.JSON(200, todoBuys)
+
+    // curl -i http://localhost:8080/api/v1/todoBuys
 }
