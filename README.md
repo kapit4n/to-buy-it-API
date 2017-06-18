@@ -7,3 +7,4 @@ go run main.go
 
 ## EndPoints
 * /todobuys
+* /todobuys/:Id
