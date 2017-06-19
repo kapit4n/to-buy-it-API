@@ -2,7 +2,6 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "net/http"
     "github.com/jinzhu/gorm"
     _ "github.com/mattn/go-sqlite3"
     "fmt"
@@ -41,15 +40,10 @@ func main() {
     {
         v1.GET("/todobuys", GetTodoBuys)
         v1.POST("/todobuys", PostTodoBuys)
+        v1.GET("/todobuys/:id", GetTodoBuy)
+        v1.PUT("/todobuys/:id", UpdateTodoBuy)
+        v1.DELETE("/todobuys/:id", DeleteTodoBuy)
     }
-
-    r.GET("/todobuys/:Id", func(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{
-            "name": "RUBICON",
-            "imgUrl": "https://s-media-cache-ak0.pinimg.com/736x/0c/a5/90/0ca590b8330c80257c36ca137486244c.jpg",
-            "price": 40000,
-        })
-    })
 
     // Listen and Server in 0.0.0.0:8080
     r.Run(":8080")
@@ -90,4 +84,93 @@ func GetTodoBuys(c *gin.Context) {
     c.JSON(200, todoBuys)
 
     // curl -i http://localhost:8080/api/v1/todoBuys
+}
+
+func GetTodoBuy(c *gin.Context) {
+    // Connection to the database
+    db := InitDb()
+    // Close connection database
+    defer db.Close()
+
+    id := c.Params.ByName("id")
+    var todoBuy TodoBuys
+    // SELECT * FROM todoBuys WHERE id = 1;
+    db.First(&todoBuy, id)
+
+    if todoBuy.Id != 0 {
+        // Display JSON result
+        c.JSON(200, todoBuy)
+    } else {
+        // Display JSON error
+        c.JSON(404, gin.H{"error": "TodoBuy not found"})
+    }
+
+    // curl -i http://localhost:8080/api/v1/todoBuys/1
+}
+
+func UpdateTodoBuy(c *gin.Context) {
+    // Connection to the database
+    db := InitDb()
+    // Close connection database
+    defer db.Close()
+
+    // Get id todoBuy
+    id := c.Params.ByName("id")
+    var todoBuy TodoBuys
+    // SELECT * FROM todoBuys WHERE id = 1;
+    db.First(&todoBuy, id)
+
+    if todoBuy.Name != "" && todoBuy.ImageUrl != "" {
+
+        if todoBuy.Id != 0 {
+            var newTodoBuy TodoBuys
+            c.Bind(&newTodoBuy)
+
+            result := TodoBuys{
+                Id:        todoBuy.Id,
+                Name: newTodoBuy.Name,
+                ImageUrl:  newTodoBuy.ImageUrl,
+                Price:  newTodoBuy.Price,
+            }
+
+            // UPDATE todoBuys SET firstname='newTodoBuy.Firstname', lastname='newTodoBuy.Lastname' WHERE id = todoBuy.Id;
+            db.Save(&result)
+            // Display modified data in JSON message "success"
+            c.JSON(200, gin.H{"success": result})
+        } else {
+            // Display JSON error
+            c.JSON(404, gin.H{"error": "TodoBuy not found"})
+        }
+
+    } else {
+        // Display JSON error
+        c.JSON(422, gin.H{"error": "Fields are empty"})
+    }
+
+    // curl -i -X PUT -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Merlyn\" }" http://localhost:8080/api/v1/todoBuys/1
+}
+
+func DeleteTodoBuy(c *gin.Context) {
+    // Connection to the database
+    db := InitDb()
+    // Close connection database
+    defer db.Close()
+
+    // Get id todoBuy
+    id := c.Params.ByName("id")
+    var todoBuy TodoBuys
+    // SELECT * FROM todoBuys WHERE id = 1;
+    db.First(&todoBuy, id)
+
+    if todoBuy.Id != 0 {
+        // DELETE FROM todoBuys WHERE id = todoBuy.Id
+        db.Delete(&todoBuy)
+        // Display JSON result
+        c.JSON(200, gin.H{"success": "TodoBuy #" + id + " deleted"})
+    } else {
+        // Display JSON error
+        c.JSON(404, gin.H{"error": "TodoBuy not found"})
+    }
+
+    // curl -i -X DELETE http://localhost:8080/api/v1/todoBuys/1
 }
