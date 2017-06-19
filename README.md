@@ -6,5 +6,8 @@ This api will share all the todoBuys rows to the client, also it will let create
 go run main.go
 
 ## EndPoints
-* /todobuys
-* /todobuys/:Id
+* POST /api/v1/todobuys
+* GET /api/v1/todobuys
+* GET /api/v1/todobuys/:Id
+* PUT /api/v1/todobuys/:Id
+* DELETE /api/v1/todobuys
