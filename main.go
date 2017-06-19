@@ -14,6 +14,7 @@ type TodoBuys struct {
     Name string `gorm:"not null" form:"name" json:"name"`
     ImageUrl string `gorm:"not null" form:"imageUrl" json:"imageUrl"`
     Price  int `gorm:"not null" form:"price" json:"price"`
+    Description  int `gorm:"not null" form:"description" json:"description"`
 }
 
 func InitDb() *gorm.DB {
@@ -131,6 +132,7 @@ func UpdateTodoBuy(c *gin.Context) {
                 Name: newTodoBuy.Name,
                 ImageUrl:  newTodoBuy.ImageUrl,
                 Price:  newTodoBuy.Price,
+                Description:  newTodoBuy.Description,
             }
 
             // UPDATE todoBuys SET firstname='newTodoBuy.Firstname', lastname='newTodoBuy.Lastname' WHERE id = todoBuy.Id;
