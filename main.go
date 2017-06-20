@@ -46,6 +46,8 @@ func main() {
         v1.DELETE("/todobuys/:id", DeleteTodoBuy)
     }
 
+    r.Use(Cors())
+
     // Listen and Server in 0.0.0.0:8080
     r.Run(":8080")
 }
@@ -175,4 +177,11 @@ func DeleteTodoBuy(c *gin.Context) {
     }
 
     // curl -i -X DELETE http://localhost:8080/api/v1/todoBuys/1
+}
+
+func Cors() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        c.Writer.Header().Add("Access-Control-Allow-Origin", "*")
+        c.Next()
+    }
 }
