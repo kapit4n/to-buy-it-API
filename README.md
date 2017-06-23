@@ -1,9 +1,12 @@
 # toBuyAPI
 ## Description
-This api will share all the todoBuys rows to the client, also it will let create/delete and update the todoBuys.
+RESTFull api to handle todoBuys items.
+
+## Prerrequisites
+* golang
 
 ## RUN
-go run main.go
+* go run main.go
 
 ## EndPoints
 * POST /api/v1/todobuys
