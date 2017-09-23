@@ -3,7 +3,7 @@ package main
 import (
     "github.com/gin-gonic/gin"
     "github.com/jinzhu/gorm"
-    _ "github.com/mattn/go-sqlite3"
+    _ "github.com/jinzhu/gorm/dialects/mysql"
     "fmt"
 )
 
@@ -15,23 +15,6 @@ type TodoBuys struct {
     ImageUrl string `gorm:"not null" form:"imageUrl" json:"imageUrl"`
     Price  int `gorm:"not null" form:"price" json:"price"`
     Description  string `gorm:"not null" form:"description" json:"description"`
-}
-
-func InitDb() *gorm.DB {
-    // Openning file
-    db, err := gorm.Open("sqlite3", "./data.db")
-    db.LogMode(true)
-    // Error
-    if err != nil {
-        panic(err)
-    }
-    // Creating the table
-    if !db.HasTable(&TodoBuys{}) {
-        db.CreateTable(&TodoBuys{})
-        db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&TodoBuys{})
-    }
-
-    return db
 }
 
 func main() {
@@ -52,10 +35,23 @@ func main() {
     r.Run(":8080")
 }
 
-func PostTodoBuys(c *gin.Context) {
-    db := InitDb()
-    defer db.Close()
+func Database() *gorm.DB {
+   //open a db connection
+    db, err := gorm.Open("mysql", "root:root@/todobuy?charset=utf8&parseTime=True&loc=Local")
+    if err != nil {
+          panic("failed to connect database")
+    }
+    if !db.HasTable(&TodoBuys{}) {
+        db.CreateTable(&TodoBuys{})
+        db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&TodoBuys{})
+    }
 
+    return db
+}
+
+func PostTodoBuys(c *gin.Context) {
+    db := Database()
+    
     var todoBuy TodoBuys
     c.BindJSON(&todoBuy)
 
@@ -64,35 +60,38 @@ func PostTodoBuys(c *gin.Context) {
     if todoBuy.Name != "" && todoBuy.ImageUrl != "" {
         // INSERT INTO "todoBuys" (name) VALUES (todoBuy.Name);
         db.Create(&todoBuy)
+        db.Save(&todoBuy)
         // Display error
         c.JSON(201, gin.H{"success": todoBuy})
     } else {
         // Display error
         c.JSON(422, gin.H{"error": "Fields are empty"})
     }
+    defer db.Close()
+
 
     // curl -i -X POST -H "Content-Type: application/json" -d "{ \"name\": \"RUBICON\", \"imageUrl\": \"https://s-media-cache-ak0.pinimg.com/736x/0c/a5/90/0ca590b8330c80257c36ca137486244c.jpg\" , \"price\": \"40000\" }" http://localhost:8080/api/v1/todoBuys
 }
 
 func GetTodoBuys(c *gin.Context) {
     // Connection to the database
-    db := InitDb()
-    // Close connection database
-    defer db.Close()
-
+    db := Database()
+    
     var todoBuys []TodoBuys
     // SELECT * FROM todoBuys
     db.Find(&todoBuys)
 
     // Display JSON result
     c.JSON(200, todoBuys)
+    // Close connection database
+    defer db.Close()
 
     // curl -i http://localhost:8080/api/v1/todoBuys
 }
 
 func GetTodoBuy(c *gin.Context) {
     // Connection to the database
-    db := InitDb()
+    db := Database()
     // Close connection database
     defer db.Close()
 
@@ -114,10 +113,8 @@ func GetTodoBuy(c *gin.Context) {
 
 func UpdateTodoBuy(c *gin.Context) {
     // Connection to the database
-    db := InitDb()
-    // Close connection database
-    defer db.Close()
-
+    db := Database()
+    
     // Get id todoBuy
     id := c.Params.ByName("id")
     var todoBuy TodoBuys
@@ -151,16 +148,17 @@ func UpdateTodoBuy(c *gin.Context) {
         // Display JSON error
         c.JSON(422, gin.H{"error": "Fields are empty"})
     }
+    // Close connection database
+    defer db.Close()
+
 
     // curl -i -X PUT -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Merlyn\" }" http://localhost:8080/api/v1/todoBuys/1
 }
 
 func DeleteTodoBuy(c *gin.Context) {
     // Connection to the database
-    db := InitDb()
-    // Close connection database
-    defer db.Close()
-
+    db := Database()
+    
     // Get id todoBuy
     id := c.Params.ByName("id")
     var todoBuy TodoBuys
@@ -176,6 +174,8 @@ func DeleteTodoBuy(c *gin.Context) {
         // Display JSON error
         c.JSON(404, gin.H{"error": "TodoBuy not found"})
     }
+    // Close connection database
+    defer db.Close()
 
     // curl -i -X DELETE http://localhost:8080/api/v1/todoBuys/1
 }
