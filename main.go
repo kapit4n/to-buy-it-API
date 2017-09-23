@@ -14,7 +14,7 @@ type TodoBuys struct {
     Name string `gorm:"not null" form:"name" json:"name"`
     ImageUrl string `gorm:"not null" form:"imageUrl" json:"imageUrl"`
     Price  int `gorm:"not null" form:"price" json:"price"`
-    Description  int `gorm:"not null" form:"description" json:"description"`
+    Description  string `gorm:"not null" form:"description" json:"description"`
 }
 
 func InitDb() *gorm.DB {
@@ -57,7 +57,8 @@ func PostTodoBuys(c *gin.Context) {
     defer db.Close()
 
     var todoBuy TodoBuys
-    c.Bind(&todoBuy)
+    c.BindJSON(&todoBuy)
+
     fmt.Printf("%s\n", "This is the common")
     fmt.Printf("%+v\n", todoBuy)
     if todoBuy.Name != "" && todoBuy.ImageUrl != "" {
