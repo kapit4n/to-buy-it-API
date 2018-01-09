@@ -15,6 +15,7 @@ type TodoBuys struct {
     ImageUrl string `gorm:"not null" form:"imageUrl" json:"imageUrl"`
     Price  int `gorm:"not null" form:"price" json:"price"`
     Description  string `gorm:"not null" form:"description" json:"description"`
+    Done  bool `gorm:"not null" form:"done" json:"done"`
 }
 
 func main() {
@@ -24,8 +25,8 @@ func main() {
     {
         v1.GET("/todobuys", GetTodoBuys)
         v1.POST("/todobuys", PostTodoBuys)
+        v1.POST("/todobuys/:id", UpdateTodoBuy)
         v1.GET("/todobuys/:id", GetTodoBuy)
-        v1.PUT("/todobuys/:id", UpdateTodoBuy)
         v1.DELETE("/todobuys/:id", DeleteTodoBuy)
     }
 
@@ -113,44 +114,24 @@ func GetTodoBuy(c *gin.Context) {
 
 func UpdateTodoBuy(c *gin.Context) {
     // Connection to the database
+    fmt.Printf("%s\n", 777777777777)
     db := Database()
     
     // Get id todoBuy
-    id := c.Params.ByName("id")
+    id := c.Param("id")
+
+
     var todoBuy TodoBuys
     // SELECT * FROM todoBuys WHERE id = 1;
     db.First(&todoBuy, id)
+    fmt.Printf("%s\n", id)
+    fmt.Printf("GET %+v\n", todoBuy)
 
-    if todoBuy.Name != "" && todoBuy.ImageUrl != "" {
-
-        if todoBuy.Id != 0 {
-            var newTodoBuy TodoBuys
-            c.Bind(&newTodoBuy)
-
-            result := TodoBuys{
-                Id:        todoBuy.Id,
-                Name: newTodoBuy.Name,
-                ImageUrl:  newTodoBuy.ImageUrl,
-                Price:  newTodoBuy.Price,
-                Description:  newTodoBuy.Description,
-            }
-
-            // UPDATE todoBuys SET firstname='newTodoBuy.Firstname', lastname='newTodoBuy.Lastname' WHERE id = todoBuy.Id;
-            db.Save(&result)
-            // Display modified data in JSON message "success"
-            c.JSON(200, gin.H{"success": result})
-        } else {
-            // Display JSON error
-            c.JSON(404, gin.H{"error": "TodoBuy not found"})
-        }
-
-    } else {
-        // Display JSON error
-        c.JSON(422, gin.H{"error": "Fields are empty"})
-    }
-    // Close connection database
+    c.BindJSON(&todoBuy)
+    todoBuy.Done = true;
+    db.Save(&todoBuy)
+    c.JSON(200, todoBuy)
     defer db.Close()
-
 
     // curl -i -X PUT -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Merlyn\" }" http://localhost:8080/api/v1/todoBuys/1
 }
@@ -183,6 +164,8 @@ func DeleteTodoBuy(c *gin.Context) {
 func Cors() gin.HandlerFunc {
     return func(c *gin.Context) {
         c.Writer.Header().Add("Access-Control-Allow-Origin", "*")
+        c.Writer.Header().Add("Access-Control-Allow-Headers", "X-Requested-With")
+        c.Writer.Header().Add("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS")
         c.Next()
     }
 }
