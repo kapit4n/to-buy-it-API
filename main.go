@@ -55,23 +55,9 @@ func PostTodoBuys(c *gin.Context) {
     
     var todoBuy TodoBuys
     c.BindJSON(&todoBuy)
-
-    fmt.Printf("%s\n", "This is the common")
-    fmt.Printf("%+v\n", todoBuy)
-    if todoBuy.Name != "" && todoBuy.ImageUrl != "" {
-        // INSERT INTO "todoBuys" (name) VALUES (todoBuy.Name);
-        db.Create(&todoBuy)
-        db.Save(&todoBuy)
-        // Display error
-        c.JSON(201, gin.H{"success": todoBuy})
-    } else {
-        // Display error
-        c.JSON(422, gin.H{"error": "Fields are empty"})
-    }
-    defer db.Close()
-
-
-    // curl -i -X POST -H "Content-Type: application/json" -d "{ \"name\": \"RUBICON\", \"imageUrl\": \"https://s-media-cache-ak0.pinimg.com/736x/0c/a5/90/0ca590b8330c80257c36ca137486244c.jpg\" , \"price\": \"40000\" }" http://localhost:8080/api/v1/todoBuys
+    db.Create(&todoBuy)
+    c.JSON(200, todoBuy)
+   defer db.Close()
 }
 
 func GetTodoBuys(c *gin.Context) {
